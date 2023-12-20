@@ -2,7 +2,7 @@ pipeline{
     agent any
     tools{
         jdk 'jdk17'
-        maven 'maven3'
+        maven 'maven'
     }
     environment {
         SCANNER_HOME=tool 'sonar-scanner'
@@ -15,7 +15,7 @@ pipeline{
         }
         stage('Checkout From Git'){
             steps{
-                git branch: 'main', url: 'https://github.com/Aj7Ay/Petclinic-Real.git'
+                git branch: 'main', url: 'https://github.com/rameshkumarvermagithub/Petclinic-Real.git'
             }
         }
         stage('mvn compile'){
@@ -40,7 +40,7 @@ pipeline{
         stage("quality gate"){
            steps {
                  script {
-                     waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token' 
+                     waitForQualityGate abortPipeline: false, credentialsId: 'sonar' 
                     }
                 } 
         } 
@@ -60,15 +60,15 @@ pipeline{
                 script{
                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
                        sh "docker build -t petclinic1 ."
-                       sh "docker tag petclinic1 sevenajay/petclinic1:latest "
-                       sh "docker push sevenajay/petclinic1:latest "
+                       sh "docker tag petclinic1 rameshkumarverma/petclinic1:latest "
+                       sh "docker push rameshkumarverma/petclinic1:latest "
                     }
                 }
             }
         }
         stage("TRIVY"){
             steps{
-                sh "trivy image sevenajay/petclinic1:latest > trivy.txt" 
+                sh "trivy image rameshkumarverma/petclinic1:latest > trivy.txt" 
             }
         }
         stage('Clean up containers') {   //if container runs it will stop and remove this block
@@ -111,7 +111,7 @@ pipeline{
     }
         stage('Deploy to conatiner'){
             steps{
-                sh 'docker run -d --name pet1 -p 8082:8080 sevenajay/petclinic1:latest'
+                sh 'docker run -d --name pet1 -p 8082:8080 rameshkumarverma/petclinic1:latest'
             }
         }
         stage("Deploy To Tomcat"){
@@ -136,7 +136,7 @@ pipeline{
             body: "Project: ${env.JOB_NAME}<br/>" +
                 "Build Number: ${env.BUILD_NUMBER}<br/>" +
                 "URL: ${env.BUILD_URL}<br/>",
-            to: 'postbox.aj99@gmail.com',
+            to: 'ramesh.verma90@gmail.com',
             attachmentsPattern: 'trivy.txt'
         }
     }
@@ -147,7 +147,7 @@ pipeline{
 
 stage('Manual Approval') {
   timeout(time: 10, unit: 'MINUTES') {
-    mail to: 'postbox.aj99@gmail.com',
+    mail to: 'ramesh.verma90@gmail.com',
          subject: "${currentBuild.result} CI: ${env.JOB_NAME}",
          body: "Project: ${env.JOB_NAME}\nBuild Number: ${env.BUILD_NUMBER}\nGo to ${env.BUILD_URL} and approve deployment"
     input message: "Deploy ${params.project_name}?", 
